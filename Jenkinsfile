@@ -1,30 +1,33 @@
 pipeline {
     agent any
 
+    tools {
+        jdk 'JDK11'   // 👈 MUST match name in Jenkins config
+    }
+
     stages {
 
         stage('Build') {
             steps {
-                sh './gradlew clean build'   // Gradle build
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh './gradlew test'   // Run tests (already included in build, but okay to keep)
+                sh 'chmod +x gradlew'
+                sh './gradlew clean build'
             }
         }
 
         stage('Run Application') {
             steps {
-                sh 'java -jar build/libs/MyGradleApp.jar'   // Run generated JAR
+                sh '''
+                JAR=$(ls build/libs/*.jar | head -n 1)
+                echo "Running $JAR"
+                java -jar $JAR
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Build and deployment successful!'
+            echo 'Build successful!'
         }
         failure {
             echo 'Build failed!'
